@@ -1,0 +1,64 @@
+{
+  "manifest_version": "0.3",
+  "name": "swdraw",
+  "display_name": "swdraw: SolidWorks drawings",
+  "version": "0.1.0",
+  "description": "Spec-driven SolidWorks drawings with self-checking dimensions, revisions, reference-safe renumbering, folder tidy and a drawing register.",
+  "long_description": "Local Windows MCP server. Builds the active SolidWorks drawing from a YAML spec (views, sections, details, dimensions checked against expected values, tolerances, GD&T, notes, title block, house-style fonts, PDF/PNG export), applies revisions, renumbers parts and drawings without breaking references, tidies working folders and generates a drawing register workbook. Requires a local SolidWorks installation and Python with pywin32.",
+  "author": {
+    "name": "Leah Martinez"
+  },
+  "license": "MIT",
+  "keywords": ["solidworks", "cad", "drawings", "gd&t", "automation", "mcp"],
+  "server": {
+    "type": "python",
+    "entry_point": "mcp_server/server.py",
+    "mcp_config": {
+      "command": "python",
+      "args": ["${__dirname}/mcp_server/server.py"],
+      "env": {
+        "PYTHONUTF8": "1",
+        "SWDRAW_OUTPUT_DIR": "${user_config.output_dir}",
+        "SWDRAW_PROFILES": "${user_config.profiles_dir}",
+        "SWDRAW_SCRIPTS_DIR": "${user_config.scripts_dir}"
+      }
+    }
+  },
+  "tools": [
+    {"name": "swdraw_validate_spec", "description": "Check a drawing spec without SolidWorks"},
+    {"name": "swdraw_build_drawing", "description": "Build the active drawing from a spec"},
+    {"name": "swdraw_revise", "description": "Apply a revision to a drawing"},
+    {"name": "swdraw_renumber", "description": "Reference-safe renumber of a part and its drawing"},
+    {"name": "swdraw_notes", "description": "Replace or dedupe the numbered notes block"},
+    {"name": "swdraw_export_pdf", "description": "Export the drawing to PDF and a PNG preview"},
+    {"name": "swdraw_tidy", "description": "Move non-live files out of a working folder"},
+    {"name": "swdraw_register", "description": "Generate the drawing register workbook"},
+    {"name": "swdraw_number", "description": "Check and allocate part numbers"},
+    {"name": "swdraw_diagnostics", "description": "Read-only drawing and reference diagnostics"},
+    {"name": "swdraw_run_script", "description": "Run your own script from the scripts folder"}
+  ],
+  "user_config": {
+    "output_dir": {
+      "type": "directory",
+      "title": "Output folder",
+      "description": "Traces, results, PDFs and PNG previews",
+      "required": true
+    },
+    "profiles_dir": {
+      "type": "directory",
+      "title": "Profiles folder",
+      "description": "Your house_style.yaml, title_block.yaml and numbering.yaml (the bundled examples are used for anything missing)",
+      "required": false
+    },
+    "scripts_dir": {
+      "type": "directory",
+      "title": "Scripts folder",
+      "description": "The only folder swdraw_run_script may run scripts from",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["win32"],
+    "runtimes": {"python": ">=3.10"}
+  }
+}
