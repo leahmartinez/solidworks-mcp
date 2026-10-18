@@ -1,0 +1,12 @@
+# Flanged bush: a turned part, revolved about the model Y axis.
+# make_part.py builds the part and an empty drawing from these numbers;
+# bush.drawing.yaml dimensions it. tests/test_spec_and_example.py checks the two agree.
+part_no: ACME1-MEC-2101
+description: FLANGED BUSH
+material: PHOSPHOR BRONZE CW453K
+flange_d: 40.0       # mm
+flange_t: 5.0
+body_d: 25.0
+length: 25.0         # overall
+bore_d: 16.0
+chamfer: 0.5         # 45 deg lead-in on the bore, top end

@@ -1,0 +1,125 @@
+# Drawing spec for the flanged bush made by make_part.py.
+#
+# Coordinates:
+#   pick / text_at / line / centre : MODEL millimetres [x, y, z]; the part axis is model Y.
+#     Section C is cut on the plane x = 0, so its geometry is at (0, y, z) with z = +/- radius.
+#   at (views, notes)              : SHEET millimetres [x, y] from the bottom-left corner.
+#
+# Every dimension carries `expect`: if the picked edges measure anything else the dimension is
+# deleted and the alternatives (or a regenerate-and-retry) are tried.
+
+drawing:
+  id: ACME1-MEC-2101
+  sheet_scale: [2, 1]
+
+style: {}                          # override profiles/house_style.yaml here
+
+clear:
+  note_patterns: ["NOTES:"]        # only old notes blocks; view labels and title block are kept
+
+layout:
+  - {view: "Drawing View1", at: [90, 200], scale: sheet}        # front
+  - {view: "Drawing View2", at: [335, 140], scale: [1, 1]}      # isometric
+
+sections:
+  - id: C
+    from_views: ["Drawing View1"]
+    line: [[0, -5, 0], [0, 30, 0]]          # along the axis
+    at: [200, 200]
+    require_upright: true                   # reject a cut that comes out with +Y pointing down
+
+details:
+  - {id: D, parent: C, centre: [0, 24.75, -8.25], radius_mm: 2.5, scale: 10, at: [300, 220]}
+
+dimensions:
+  - id: D_FLANGE
+    view: C
+    pick: [[0, 2.5, -20], [0, 2.5, 20]]
+    text_at: [0, -8, 0]
+    prefix: "<MOD-DIAM>"
+    expect: 40.0
+  - id: D_BODY
+    view: C
+    pick: [[0, 15, -12.5], [0, 15, 12.5]]
+    text_at: [0, 31, 0]
+    prefix: "<MOD-DIAM>"
+    expect: 25.0
+    tolerance: {type: symmetric, lower: -0.05, upper: 0.05}
+  - id: D_BORE
+    view: C
+    pick: [[0, 12, -8], [0, 12, 8]]
+    text_at: [0, 18, 0]
+    prefix: "<MOD-DIAM>"
+    suffix: " H7"
+    expect: 16.0
+    tolerance: {type: bilateral, lower: 0, upper: 0.018}
+    precision: 3
+  - id: L_OVERALL
+    view: C
+    pick: [[0, 0, -14], [0, 25, -10.5]]
+    alternatives:
+      - [[0, 0, 14], [0, 25, 10.5]]
+    text_at: [0, 12.5, -30]
+    expect: 25.0
+    tolerance: {type: symmetric, lower: -0.1, upper: 0.1}
+  - id: T_FLANGE
+    view: C
+    pick: [[0, 0, 16], [0, 5, 16]]
+    text_at: [0, 2.5, 27]
+    expect: 5.0
+    tolerance: {type: symmetric, lower: -0.05, upper: 0.05}
+
+gdt:
+  datums:
+    - {label: A, view: C, on_dim: D_BORE}                         # bore axis
+    - {label: B, view: C, edge: [0, 0, -17], text_at: [0, -5, -17]}   # flange bottom face
+  frames:
+    - id: RUNOUT_BODY
+      view: C
+      edge: [0, 15, 12.5]
+      text_at: [0, 22, 24]
+      frames: [[SRUN, "0.03", A]]
+    - id: PERP_FLANGE
+      view: C
+      edge: [0, 5, -16]
+      text_at: [0, -12, -30]
+      frames: [[PERP, "0.02", A]]
+
+leader_notes:
+  - id: CHAMFER
+    view: D
+    edge: [0, 24.75, -8.25]
+    text_at: [0, 26.2, -6.8]
+    text: "0.5 x 45° CHAMFER"
+
+notes:
+  at: [24, 92]                     # sheet mm, top-left of the block
+  lines:
+    - "MATERIAL: {material}."
+    - "GENERAL TOLERANCES TO {general_tolerance} UNLESS OTHERWISE SPECIFIED."
+    - "BREAK ALL SHARP EDGES 0.1-0.2."
+    - ["BORE {bore} FINISH Ra 0.8 MAX.", "REAM OR FINE BORE AFTER TURNING."]
+    - "REMOVE ALL BURRS. SUPPLY CLEAN AND OIL-FREE."
+
+revision_row:                      # fills revision-table row A
+  desc: FIRST ISSUE
+  drawn: AD
+
+title_block:
+  part_no: ACME1-MEC-2101
+  description: FLANGED BUSH
+  material: PHOSPHOR BRONZE CW453K
+  finish: AS MACHINED - SEE NOTE 4
+  project: ACME1
+  parent: ACME1-MEC-2100
+  status: PROTOTYPE
+  revision: A
+  drawn_by: A. DRAFTER
+  drawn_date: today
+  # values used in the notes block above
+  general_tolerance: ISO 2768-mK
+  bore: "<MOD-DIAM>16 H7"
+
+export:
+  pdf: true
+  png: true
