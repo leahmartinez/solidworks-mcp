@@ -1,0 +1,28 @@
+name: release
+
+# Push a tag like v0.2.0 to build swdraw.mcpb and attach it to a GitHub release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  mcpb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check the tag matches manifest.json
+        run: |
+          v=$(python3 -c "import json;print(json.load(open('manifest.json'))['version'])")
+          [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != manifest v$v"; exit 1; }
+      - name: Build extension
+        run: npx -y @anthropic-ai/mcpb pack . "swdraw-${GITHUB_REF_NAME#v}.mcpb"
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" "swdraw-${GITHUB_REF_NAME#v}.mcpb" --title "swdraw ${GITHUB_REF_NAME}" --generate-notes

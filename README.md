@@ -28,41 +28,49 @@ bundled MCP server.
 ## Requirements
 
 - Windows with SolidWorks 2025 or later (earlier versions probably work; untested)
-- Python 3.10+ with `pywin32`, `pyyaml`, `openpyxl`
-- Optional: `pymupdf` for PNG previews, `mcp` for the Claude Desktop extension
+- [uv](https://docs.astral.sh/uv/) (`winget install astral-sh.uv`). It installs Python and every
+  dependency on first run.
 
-`validate`, `tidy`, `register`, `number` and the test-suite run anywhere, without SolidWorks.
+`validate`, `tidy`, `register`, `number`, `setup` and the test-suite run anywhere, without SolidWorks.
 
 ## Install
 
 ```powershell
 git clone https://github.com/<you>/swdraw.git
 cd swdraw
-python -m pip install -e ".[mcp,preview]"
+uv sync --extra mcp --extra preview
 ```
 
-Install it editable (`-e`) so the bundled `profiles/` are found next to the package.
+Then connect it to your AI client. Pick one:
 
-### Claude Desktop extension (optional)
-
-The repository is an MCP Bundle: `manifest.json` plus `mcp_server/server.py`.
-
-```powershell
-npx @anthropic-ai/mcpb pack . swdraw.mcpb
-```
-
-Open the `.mcpb` with Claude Desktop (or drag it onto Settings > Extensions) and set:
+**Claude Desktop, as an extension (one click).** Download `swdraw-<version>.mcpb` from the
+Releases page, or build it with `npx @anthropic-ai/mcpb pack . swdraw.mcpb`, and open it with
+Claude Desktop. Set:
 
 - **Output folder**: where traces, results, PDFs and PNG previews go
 - **Profiles folder** (optional): your own `house_style.yaml`, `title_block.yaml`, `numbering.yaml`
 - **Scripts folder** (optional): the only folder `swdraw_run_script` may run scripts from
 
-The extension runs `python` from your PATH, so install the dependencies into that interpreter.
+**From the clone, with one command.** Each `setup` shows the change first; add `--apply` to make
+it. Config files are backed up to `.bak` first.
+
+```powershell
+uv run python -m swdraw setup claude-code --skill --output-dir ~/swdraw-output --apply
+uv run python -m swdraw setup claude-desktop --output-dir ~/swdraw-output --apply   # not if you installed the .mcpb
+uv run python -m swdraw setup codex --output-dir ~/swdraw-output --apply
+```
+
+`--skill` also copies `SKILL.md`, `references/` and `subskills/` to `~/.claude/skills/swdraw`, so
+Claude Code knows the workflow. Restart the client afterwards.
+
+**Any other MCP client:** run `uv run --directory <clone> --extra mcp --extra preview python
+mcp_server/server.py` over stdio. See [mcp_server/README.md](mcp_server/README.md).
 
 ## Set up a profiles folder
 
 Copy `profiles/` somewhere of your own and point `SWDRAW_PROFILES` (or the extension setting) at
-it. Anything you leave out falls back to the bundled files. See [CONFIGURATION.md](CONFIGURATION.md).
+it. Anything you leave out falls back to the bundled files. See
+[references/profiles.md](references/profiles.md).
 
 To generate a matching A3 sheet format and drawing template, import `templates/A3_SheetFormat.bas`
 into a new SolidWorks macro, edit the constants at the top (company name, projection,
@@ -72,13 +80,13 @@ confidentiality block, linked properties or placeholders) and run `main`.
 
 ```powershell
 # 1. make the part and a drawing with front + isometric views
-python examples/flanged_bush/make_part.py --args "{\"out\": \"~/swdraw-example\"}"
+uv run python examples/flanged_bush/make_part.py --args "{\"out\": \"~/swdraw-example\"}"
 
 # 2. check the spec (no SolidWorks needed)
-python -m swdraw validate --spec examples/flanged_bush/bush.drawing.yaml
+uv run python -m swdraw validate --spec examples/flanged_bush/bush.drawing.yaml
 
 # 3. with the new drawing active in SolidWorks, build it
-python -m swdraw build --spec examples/flanged_bush/bush.drawing.yaml
+uv run python -m swdraw build --spec examples/flanged_bush/bush.drawing.yaml
 ```
 
 The result lists every step, each dimension's measured value and which pick pair produced it,
@@ -89,36 +97,24 @@ Run part of the build again after an edit. Include `clear`, or the annotations a
 second time:
 
 ```powershell
-python -m swdraw build --spec bush.drawing.yaml --steps clear,dimensions,gdt,leader_notes,notes,fonts,export
+uv run python -m swdraw build --spec bush.drawing.yaml --steps clear,dimensions,gdt,leader_notes,notes,fonts,export
 ```
 
 Then issue revision B:
 
 ```powershell
-python -m swdraw revise --args "{\"rev\": \"B\", \"desc\": \"BORE TOLERANCE CHANGED\", \"drawn\": \"AD\", \"approved\": \"CC\", \"approver_name\": \"C. CHECKER\"}"
+uv run python -m swdraw revise --args "{\"rev\": \"B\", \"desc\": \"BORE TOLERANCE CHANGED\", \"drawn\": \"AD\", \"approved\": \"CC\", \"approver_name\": \"C. CHECKER\"}"
 ```
 
 ## Writing a spec
 
 Coordinates are **model millimetres** for anything attached to geometry (`pick`, `text_at`,
 section `line`, detail `centre`) and **sheet millimetres from the bottom-left corner** for
-positions on the sheet (`at`). Find model coordinates in SolidWorks with *Measure* or from the
-sketch; for a revolved or symmetric part, pick on the section plane.
+positions on the sheet (`at`). Every dimension carries `expect`, the value it must measure.
 
-```yaml
-dimensions:
-  - id: D_BORE
-    view: C                         # a view name, or the id of a section/detail from this spec
-    pick: [[0, 12, -8], [0, 12, 8]] # two edges (or one, for a radius/diameter)
-    text_at: [0, 18, 0]
-    prefix: "<MOD-DIAM>"
-    expect: 16.0                    # the self-check
-    tolerance: {type: bilateral, lower: 0, upper: 0.018}
-    alternatives:                   # tried in order if the picks fail or measure wrong
-      - [[0, 6, -8], [0, 6, 8]]
-```
-
-The full example with every step is [examples/flanged_bush/bush.drawing.yaml](examples/flanged_bush/bush.drawing.yaml).
+Start from [subskills/engineering-drawing/spec_template.yaml](subskills/engineering-drawing/spec_template.yaml).
+For a complete example, see [examples/flanged_bush/bush.drawing.yaml](examples/flanged_bush/bush.drawing.yaml).
+Every key is described in [references/drawing-spec.md](references/drawing-spec.md).
 
 ## Your own scripts
 
@@ -132,31 +128,49 @@ names = [sw.call(v, "GetName2") for v in sw.views(dwg)]
 sw.result({"views": names, "args": sw.args()})
 ```
 
-Run it with `python -m swdraw run my_script.py --args "{...}"`, or from Claude with
+Run it with `uv run python -m swdraw run my_script.py --args "{...}"`, or from Claude with
 `swdraw_run_script` if it lives in your scripts folder.
 
 ## When something goes wrong
 
-Read [GOTCHAS.md](GOTCHAS.md) first; most surprises are SolidWorks API behaviour. Then:
+Start with [references/troubleshooting.md](references/troubleshooting.md), then
+[references/api-gotchas.md](references/api-gotchas.md); most surprises are SolidWorks API behaviour. Then:
 
 ```powershell
-python -m swdraw diag views          # names, origins, scales, whether model +Y is up
-python -m swdraw diag annotations    # incl. dangling centre marks
+uv run python -m swdraw diag views          # names, origins, scales, whether model +Y is up
+uv run python -m swdraw diag annotations    # incl. dangling centre marks
 ```
 
 Each run appends to `swdraw.log` in the output folder.
 
+## Repository layout
+
+| Path | What's there |
+|---|---|
+| `SKILL.md`, `SUBSKILLS.md` | instructions for Claude: which tool when, which reference to read |
+| `references/` | drawing specs, profiles, workflows, troubleshooting, SolidWorks API gotchas |
+| `subskills/engineering-drawing/` | end-to-end drawing workflow and a spec template |
+| `capabilities.yaml` | every MCP tool with its arguments (generated) |
+| `swdraw/` | the Python package: COM helpers, drawing builder, revision, renumber, notes, tidy, register |
+| `mcp_server/` | the MCP server (stdio) |
+| `manifest.json` | the Claude Desktop extension manifest |
+| `profiles/` | example house style, title block and numbering profiles |
+| `templates/` | A3 sheet-format macro and a feature-dump macro (VBA source) |
+| `examples/flanged_bush/` | worked example: part generator and drawing spec |
+| `tests/` | tests against a fake SolidWorks API |
+| `.github/workflows/` | CI on Windows and Linux; release builds the `.mcpb` from a tag |
+
 ## Tests
 
 ```powershell
-python -m pytest
+uv run --extra dev python -m pytest
 ```
 
 The tests use a fake of the SolidWorks drawing API (`tests/fakes.py`). They cover selection,
 dimension self-checking and fallback, tolerances, title-block matching, revisions, notes, tidy,
 the register (including formula results when LibreOffice is installed), numbering, spec
 validation and the example's geometry. What they can't cover is listed in
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](CONTRIBUTING.md). CI runs them on Windows and Linux for every push.
 
 ## Licence
 
