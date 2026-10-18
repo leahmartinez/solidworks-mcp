@@ -26,7 +26,7 @@ def clear_annotations(ctx: DrawingContext, note_patterns: Sequence[str] = ("NOTE
 
     View labels (``keep_prefixes``) and the title block are kept. Notes that cannot be deleted
     (they live in the sheet format) are blanked instead. Dangling centre marks are attempted, but
-    some cannot be selected through the API at all and need a manual delete (see GOTCHAS.md).
+    some cannot be selected through the API at all and need a manual delete (see references/api-gotchas.md).
     """
     keep = tuple(p.upper() for p in (keep_prefixes or ctx.style.view_label_prefixes))
     patterns = [p.upper() for p in note_patterns]
@@ -166,7 +166,7 @@ def section(ctx: DrawingContext, spec: Dict[str, Any]) -> str:
     the other side of the cutting line is what reverses the viewing direction. With
     ``require_upright`` a result whose model +Y points down the sheet is deleted and the next
     attempt made. Rotating a section view breaks its transform, so cut from the opposite view
-    instead (GOTCHAS.md); ``remove_alignment`` then lets it move to ``at``. The section line is
+    instead (references/api-gotchas.md); ``remove_alignment`` then lets it move to ``at``. The section line is
     drawn in the source view's sketch space.
     """
     label = spec["id"]

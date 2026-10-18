@@ -76,7 +76,7 @@ class DrawingContext:
             com.call(self.dwg, "EditRebuild3")
 
     def regen(self) -> None:
-        """Make every view's geometry exist and display before picking edges (see GOTCHAS.md)."""
+        """Make every view's geometry exist and display before picking edges (see references/api-gotchas.md)."""
         self.rebuild()
         for m in ("ViewZoomtofit2", "GraphicsRedraw2"):
             try:

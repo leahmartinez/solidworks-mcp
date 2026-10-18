@@ -1,4 +1,7 @@
-# Configuration
+# Profiles and environment
+
+Read this when setting up a house style, a title block or a numbering scheme, or when a
+profile isn't being picked up.
 
 swdraw reads three profiles. Each is a YAML (or JSON) file. Lookup order:
 
@@ -19,8 +22,6 @@ Environment variables:
 | `SWDRAW_TIMEOUT_S` | 600 | per-call timeout in the MCP server |
 
 Paths in profiles and args may use `~` and `${ENV_VAR}`. No paths are hard-coded anywhere.
-
----
 
 ## House style: `house_style.yaml`
 
@@ -128,7 +129,7 @@ placeholder_notes:
 
 - `at` is in **sheet millimetres from the bottom-left corner**, measured at the note's anchor (what
   `Annotation.GetPosition` returns, which is the top-left of the text). The easiest way to get the
-  numbers for your template: open a blank drawing and run `python -m swdraw diag annotations`. The
+  numbers for your template: open a blank drawing and run `uv run python -m swdraw diag annotations`. The
   sheet-level entries list each note's position.
 - A note is replaced only while it still shows its placeholder (or is blank), so running twice
   doesn't overwrite real values. Pass `overwrite` in code if you need to.
@@ -176,44 +177,3 @@ properties_static: {}       # extra values for the templates above, e.g. {projec
 A different scheme works as long as it can be written as a pattern with `{product}`,
 `{discipline}` and `{number}`. For example, `"{discipline}{number:05d}"` with an empty product
 also works.
-
----
-
-## Drawing specs
-
-See `examples/flanged_bush/bush.drawing.yaml` for every key. In short:
-
-| Key | Contents |
-|---|---|
-| `drawing` | `id` (used for export file names), `sheet_scale: [num, den]` |
-| `style`, `profiles` | per-drawing overrides |
-| `clear` | `note_patterns` to delete (view labels and title block are always kept), `dangling_centre_marks` |
-| `layout` | `[{view, at: [x_mm, y_mm], scale: sheet | [num, den]}]`, or `{view, suppress: true}` to hide a view |
-| `sections` | `[{id, from_views: [...], line: [[x,y,z],[x,y,z]], at, alt_at: [[x,y], ...], require_upright, remove_alignment}]`. An `alt_at` on the other side of the cutting line reverses the viewing direction |
-| `details` | `[{id, parent, centre: [x,y,z], radius_mm, scale, at}]` |
-| `dimensions` | `[{id, view, pick, alternatives, text_at, expect, tolerance, prefix, suffix, diametric, precision, arc_expect}]` |
-| `gdt.datums` | `[{label, view, on_dim}]` or `[{label, view, edge, text_at}]` |
-| `gdt.frames` | `[{id, view, edge, text_at, frames: [[SYMBOL, tol, datum1, datum2]], above}]` |
-| `leader_notes` | `[{id, view, edge, text_at, text}]` |
-| `notes` | `{at: [x_mm, y_mm], lines: [...], heading}`; lines may use `{key}` from `title_block` |
-| `title_block` | field values (see the profile); `drawn_date: today` is filled in |
-| `revision_row` | `{desc, date, drawn, approved}` for the current revision's row (custom-properties mode) |
-| `export` | `{pdf: true, png: true, path}` |
-
-Tolerance types: `none`, `basic` (boxed, theoretically exact), `bilateral`, `limit`,
-`symmetric`, `min`, `max`, `metric`, `fit`, `fit_with_tolerance`, `fit_tolerance_only`, or the
-`swTolType_e` number. Only bilateral, limit and symmetric take `lower`/`upper`. Limits are in mm. `lower` is signed, so a symmetric ±0.05 is
-`lower: -0.05, upper: 0.05`.
-
-GD&T symbols are the SolidWorks `<GTOL-...>` codes without the brackets and prefix, for example
-`FLAT`, `PARA`, `PERP`, `SPROF` and `SRUN`. The full list is in `gtol.sym` in your SolidWorks
-installation (under `lang\<language>`).
-
-`python -m swdraw validate --spec your.yaml` checks a spec without SolidWorks. It reports missing
-keys, malformed points, duplicate ids, datums pointing at unknown dimensions and any dimension
-without `expect`.
-
-With the MCP tools, pass absolute paths: the server runs from its own install folder.
-
-A datum on a dimension (`on_dim`) in a run without the `dimensions` step finds the existing
-dimension in its view by its `expect` value.

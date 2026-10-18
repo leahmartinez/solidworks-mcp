@@ -1,38 +1,58 @@
 ---
 name: swdraw
-description: Build, revise and renumber SolidWorks drawings with the swdraw tools. Use when asked to create or fix a SolidWorks drawing, dimension a part, add GD&T or notes, issue a revision, renumber or rename parts and drawings, tidy a CAD working folder or update a drawing register.
+description: Build, revise and renumber SolidWorks drawings with the swdraw MCP tools. Use when asked to create or fix a SolidWorks drawing, dimension a part, add GD&T or notes, issue a revision, renumber or rename parts and drawings, tidy a CAD working folder or update a drawing register.
 ---
 
-# Working with SolidWorks drawings through swdraw
+# SolidWorks drawings with swdraw
 
-## Before you start
-- Ask which drawing (or make it active) and whether the user wants it saved. swdraw never saves
-  unless told to (`save: true`).
-- Read the house style, title-block and numbering profiles if the user has their own.
+swdraw builds the active SolidWorks drawing from a YAML spec and checks every dimension against
+the value it should measure. It also handles the jobs around a drawing: revisions, reference-safe
+renumbering, the notes block, folder tidy and the drawing register.
 
-## Building a drawing
-1. Write or update a spec (see `examples/flanged_bush/bush.drawing.yaml`). Get model coordinates
-   from the part, not by guessing: dimensions of features, `swdraw_diagnostics views` for view
-   names and orientation.
-2. Give every dimension an `expect` value. Add `alternatives` for picks near other edges.
-3. `swdraw_validate_spec`, fix everything it reports.
-4. `swdraw_build_drawing`. Read `result.check`: failed dimensions or annotations name what to fix.
-5. **Look at the exported PNG.** Check every view has geometry, nothing overlaps, the notes block
-   clears the title block, view labels are readable. Move things with `text_at` / `at` and re-run
-   only the steps you need (`steps: ["dimensions", "gdt", "fonts", "export"]`).
-6. Tell the user what's left that the API can't do (for example dangling centre marks).
+## Tools
 
-## Revisions and renumbering
-- Revisions: `swdraw_revise` with `rev`, `desc`, initials and approver. Confirm the row and the
-  wording with the user first.
-- Renumbering renames files. Confirm the old and new numbers, run with `save: false` first if
-  unsure, and only use `supersede` once the user agrees. Report `dependencies` afterwards.
+| Tool | Use for |
+|---|---|
+| `swdraw_validate_spec` | checking a spec before building (no SolidWorks needed) |
+| `swdraw_build_drawing` | building or rebuilding the active drawing from a spec |
+| `swdraw_export_pdf` | PDF plus PNG preview of a drawing |
+| `swdraw_revise` | revision row, REV box, approval, small layout moves |
+| `swdraw_renumber` | renaming a part and drawing without breaking references |
+| `swdraw_notes` | replacing or de-duplicating the numbered notes block |
+| `swdraw_tidy` | moving non-live files out of a working folder (dry run first) |
+| `swdraw_register` | generating the drawing register workbook |
+| `swdraw_number` | checking and allocating part numbers |
+| `swdraw_diagnostics` | read-only look at views, selection, annotations, references |
+| `swdraw_run_script` | the user's own scripts from their scripts folder |
 
-## Folders and the register
-- `swdraw_tidy` is a dry run by default. Show the user the planned moves before running with
-  `dry_run: false`.
-- `swdraw_register` regenerates the workbook. Revision history comes from the data you pass, so
-  read the existing workbook first if one exists.
+Full list with arguments: `capabilities.yaml`.
 
-## If something misbehaves
-Check `GOTCHAS.md`, then `swdraw_diagnostics` (`views`, `selection`, `annotations`, `refs`).
+## References: read the one you need
+
+| Read | When |
+|---|---|
+| `references/drawing-spec.md` | writing or fixing a drawing spec |
+| `references/profiles.md` | setting up house style, title block or numbering; a profile isn't picked up |
+| `references/workflows.md` | before revising, renumbering, tidying or regenerating the register |
+| `references/troubleshooting.md` | a build reports failures or the sheet looks wrong |
+| `references/api-gotchas.md` | a SolidWorks call misbehaves, or before changing swdraw's code |
+
+## Subskills
+
+| Subskill | When |
+|---|---|
+| `subskills/engineering-drawing/SKILL.md` | making a new drawing of a part, or fully redoing one |
+
+## Rules
+- **Ask before changing files.** Confirm which drawing, and whether to save. swdraw never saves
+  unless asked (`save: true`).
+- **Use absolute paths** for specs and files. The server runs from its own folder.
+- **Give every dimension an `expect` value**, and validate the spec before building.
+- **Check the result after every build.** Read `check`, then look at the PNG before telling the
+  user it's done. The self-check proves the right edges were dimensioned, not that the layout is
+  clean.
+- **Include `clear` when re-running a build**, or annotations are added twice.
+- **Renumbering and tidying move and rename files.** Show the plan (dry run, `save: false`)
+  and get a yes first.
+- **Report what the API couldn't do.** Some things need a manual fix (for example, dangling
+  centre marks); tell the user.

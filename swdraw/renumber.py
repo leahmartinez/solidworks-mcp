@@ -1,6 +1,6 @@
 """Reference-safe renumbering of a part and its drawing.
 
-The order matters (see GOTCHAS.md):
+The order matters (see references/api-gotchas.md):
 
 1. write the new custom properties to the part
 2. **Save As the part while its drawing is open**: the open drawing re-points to the new file

@@ -1,0 +1,95 @@
+# swdraw MCP tools. Generated; run scripts/generate_capabilities.py after changing mcp_server/server.py.
+name: swdraw
+version: 0.2.0
+generated_by: scripts/generate_capabilities.py (do not edit by hand)
+tools:
+- name: swdraw_build_drawing
+  description: 'Build the ACTIVE SolidWorks drawing from a spec: scale, clear, layout, sections, details,
+    self-checked dimensions, GD&T, leader notes, notes block, title block, fonts, PDF/PNG export. Does
+    not save. `spec_path` must be absolute. `steps` runs a subset (e.g. ["clear", "dimensions", "gdt",
+    "export"]). Look at result.check and the PNG afterwards.'
+  needs_solidworks: true
+  changes: the active drawing (not saved)
+  arguments:
+    spec_path: required
+    steps: optional
+    title_block: optional
+    strict: optional
+- name: swdraw_diagnostics
+  description: 'Read-only probes of the active drawing: ''views'', ''selection'', ''annotations''; or
+    ''refs'' with args.paths.'
+  needs_solidworks: true
+  changes: nothing (read-only)
+  arguments:
+    what: required
+    args: optional
+- name: swdraw_export_pdf
+  description: Export the active drawing (or args.drawing) to PDF, plus a PNG preview for visual checking
+    (args.path, args.png).
+  needs_solidworks: true
+  changes: writes PDF/PNG to the output folder
+  arguments:
+    args: optional
+- name: swdraw_notes
+  description: 'action ''replace'': delete and re-insert the numbered NOTES: block (args: lines, pos [mm],
+    values, drawing, save). action ''dedupe'': keep the numbered block, delete copies that lost their
+    numbering (args: pos, drawing, save).'
+  needs_solidworks: true
+  changes: 'the drawing; saves only with save: true'
+  arguments:
+    action: required
+    args: required
+- name: swdraw_number
+  description: Part numbers. action 'check' (args.numbers), 'next-part' (args.assembly, args.used), 'next-assembly'
+    (args.used, args.discipline).
+  needs_solidworks: false
+  changes: nothing (read-only)
+  arguments:
+    action: required
+    args: required
+- name: swdraw_register
+  description: 'Generate the drawing register workbook (Register / Revision History / Numbering). Keys:
+    out, title, drawings [{number,title,type,parent,file}], revisions [{number,rev,date,description,by,approved,status}],
+    or data: path to a YAML/JSON file with those keys; numbering_profile.'
+  needs_solidworks: false
+  changes: writes the register workbook
+  arguments:
+    args: required
+- name: swdraw_renumber
+  description: 'Reference-safe renumber of a part and its drawing (part Save As with the drawing open,
+    notes swap, drawing Save As, dependency check, optional supersede/folder rename/verify). Keys: drawing,
+    old, new, old_parent, new_parent, description, revision, part, notes_lines, save, supersede, rename_folder.'
+  needs_solidworks: true
+  changes: renames part and drawing files; supersede moves old files
+  arguments:
+    args: required
+- name: swdraw_revise
+  description: 'Apply a revision to a drawing (active, or args.drawing): rev row, REV box, approval, SEE
+    NOTE n, view shifts, moving dims/GTols to model points. Keys: rev, row, desc, date, drawn, approved,
+    approver_name, approved_date, finish_note, shift_views, notes_pos, move_dims, move_gtols, save.'
+  needs_solidworks: true
+  changes: 'the drawing; saves only with save: true'
+  arguments:
+    args: required
+- name: swdraw_run_script
+  description: Run one of your own Python scripts from SWDRAW_SCRIPTS_DIR with swdraw importable (`import
+    swdraw as sw; sw.args(); sw.result({...})`).
+  needs_solidworks: true
+  changes: whatever the script does
+  arguments:
+    script: required
+    args: optional
+- name: swdraw_tidy
+  description: 'Move files that aren''t live out of a working folder. DRY RUN unless dry_run is false.
+    Keys: working, keep (glob list), superseded, move_folders, dry_run.'
+  needs_solidworks: false
+  changes: moves files unless dry_run (default true)
+  arguments:
+    args: required
+- name: swdraw_validate_spec
+  description: Check a drawing spec (YAML/JSON, absolute path) for missing keys, bad points and dimensions
+    without `expect`. No SolidWorks needed.
+  needs_solidworks: false
+  changes: nothing (read-only)
+  arguments:
+    spec_path: required

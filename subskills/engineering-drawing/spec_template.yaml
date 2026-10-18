@@ -1,0 +1,64 @@
+# Drawing spec template. Copy, rename to <part>.drawing.yaml and fill in.
+# Model mm for pick / text_at / line / centre; sheet mm (from bottom-left) for `at`.
+# Full reference: references/drawing-spec.md. Worked example: examples/flanged_bush/bush.drawing.yaml
+
+drawing:
+  id: PART-NO
+  sheet_scale: [1, 1]
+
+clear:
+  note_patterns: ["NOTES:"]
+
+layout:
+  - {view: "Drawing View1", at: [100, 190], scale: sheet}      # base view
+  # - {view: "Drawing View2", at: [330, 140], scale: [1, 1]}   # isometric
+
+sections: []
+#  - id: A
+#    from_views: ["Drawing View1"]
+#    line: [[x, y, z], [x, y, z]]
+#    at: [220, 190]
+#    require_upright: true
+
+details: []
+#  - {id: B, parent: A, centre: [x, y, z], radius_mm: 4, scale: 5, at: [320, 220]}
+
+dimensions: []
+#  - id: D_EXAMPLE
+#    view: A
+#    pick: [[x, y, z], [x, y, z]]
+#    text_at: [x, y, z]
+#    expect: 0.0
+#    tolerance: {type: symmetric, lower: -0.05, upper: 0.05}
+
+gdt:
+  datums: []
+  frames: []
+
+leader_notes: []
+
+notes:
+  at: [24, 92]
+  lines:
+    - "MATERIAL: {material}."
+    - "GENERAL TOLERANCES TO {general_tolerance} UNLESS OTHERWISE SPECIFIED."
+    - "BREAK ALL SHARP EDGES 0.1-0.2."
+
+revision_row:
+  desc: FIRST ISSUE
+  drawn: XX
+
+title_block:
+  part_no: PART-NO
+  description: PART DESCRIPTION
+  material: MATERIAL
+  finish: FINISH
+  project: PROJECT
+  parent: ASSEMBLY-NO
+  status: DRAFT
+  revision: A
+  drawn_by: NAME
+  drawn_date: today
+  general_tolerance: ISO 2768-mK
+
+export: {pdf: true, png: true}
