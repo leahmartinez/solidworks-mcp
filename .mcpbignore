@@ -5,3 +5,7 @@ docs/
 *.pyc
 .pytest_cache/
 *.mcpb
+.venv/
+.ruff_cache/
+.github/
+scripts/

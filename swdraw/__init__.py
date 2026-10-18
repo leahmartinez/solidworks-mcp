@@ -11,4 +11,4 @@ Short helper aliases for writing your own scripts::
 from .com import active, app, arr8, byref_int, call, find_view, invoke, nothing, open_doc, views  # noqa: F401
 from .runner import args, log, result  # noqa: F401
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

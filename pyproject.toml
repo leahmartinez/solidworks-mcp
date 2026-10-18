@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swdraw"
-version = "0.1.0"
+version = "0.2.0"
 description = "Spec-driven SolidWorks drawings with self-checking dimensions, revisions, reference-safe renumbering and a drawing register"
 readme = "README.md"
 license = {text = "MIT"}
@@ -33,6 +33,10 @@ swdraw = "swdraw.cli:main"
 
 [tool.setuptools]
 packages = ["swdraw", "swdraw.drawing"]
+
+[tool.uv]
+# The Claude Desktop extension runs `uv run --extra mcp --extra preview ...`, so the lock covers Windows.
+environments = ["sys_platform == 'win32'", "sys_platform == 'linux'", "sys_platform == 'darwin'"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
