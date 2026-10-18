@@ -126,6 +126,11 @@ def test_properties_template(scheme):
     assert p == {"PartNo": "ACME1-MEC-2101", "ParentAssy": "ACME1-MEC-2100", "Supplier": "TBC"}
 
 
+def test_pattern_without_product():
+    sc = Scheme({"pattern": "{discipline}{number:05d}", "product": "", "disciplines": {"MEC": "m"}})
+    assert sc.format(2101) == "MEC02101" and sc.parse("MEC02101").number == 2101
+
+
 def test_bundled_numbering_profile_loads():
     sc = Scheme()
     assert sc.is_valid(sc.format(sc.first_block + 1))

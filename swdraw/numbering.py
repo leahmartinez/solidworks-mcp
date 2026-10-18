@@ -44,7 +44,8 @@ class Scheme:
         m = self._re.match(text.strip())
         if not m:
             raise ValueError(f"{text!r} does not match {self.pattern}")
-        pn = PartNumber(m.group("product"), m.group("discipline").upper(), int(m.group("number")))
+        g = m.groupdict()
+        pn = PartNumber(g.get("product") or self.product, (g.get("discipline") or "").upper(), int(g["number"]))
         if pn.discipline not in self.disciplines:
             raise ValueError(f"unknown discipline {pn.discipline!r} (allowed: {', '.join(self.disciplines)})")
         return pn
