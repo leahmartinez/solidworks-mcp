@@ -1,7 +1,7 @@
 """Command line: ``python -m swdraw <command> [options]``.
 
 Commands that need SolidWorks: build, revise, renumber, notes, export, diag, run.
-Commands that don't: validate, tidy, register, number.
+Commands that don't: validate, tidy, register, number, setup.
 
 Every command prints one JSON result between SWDRAW_RESULT_BEGIN/END markers.
 """
@@ -116,6 +116,14 @@ def cmd_diag(ns) -> Dict[str, Any]:
             "annotations": dg.annotations_report}[ns.what](dwg)
 
 
+def cmd_setup(ns) -> Dict[str, Any]:
+    from .clients import setup
+    a = _args(ns)
+    return setup(ns.client, apply=ns.apply, skill=ns.skill, output_dir=ns.output_dir or a.get("output_dir"),
+                 profiles=ns.profiles or a.get("profiles"), scripts=ns.scripts or a.get("scripts"),
+                 uv=a.get("uv"), config_path=a.get("config_path"), skill_dest=a.get("skill_dest"))
+
+
 def cmd_run(ns) -> Optional[Dict[str, Any]]:
     """Run your own script with swdraw importable and the args available via swdraw.runner.args()."""
     runner.set_args(_args(ns))
@@ -151,6 +159,13 @@ def make_parser() -> argparse.ArgumentParser:
     nb.add_argument("action", choices=["check", "next-part", "next-assembly"])
     d = add("diag", cmd_diag, "read-only diagnostics")
     d.add_argument("what", choices=["views", "selection", "annotations", "refs"])
+    st = add("setup", cmd_setup, "register the MCP server with Claude Code, Claude Desktop or Codex")
+    st.add_argument("client", choices=["claude-code", "claude-desktop", "codex"])
+    st.add_argument("--apply", action="store_true", help="make the change (default: show it)")
+    st.add_argument("--skill", action="store_true", help="also install SKILL.md and references for Claude Code")
+    st.add_argument("--output-dir", dest="output_dir")
+    st.add_argument("--profiles")
+    st.add_argument("--scripts")
     r = add("run", cmd_run, "run your own script with swdraw available")
     r.add_argument("script")
     return p
