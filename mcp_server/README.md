@@ -1,8 +1,8 @@
 # swdraw MCP server
 
-A stdio MCP server exposing the swdraw tools. Every tool runs `python -m swdraw <command>` in a
-fresh subprocess and returns its JSON result, so a COM error or a stuck SolidWorks call can't take
-the server down (calls time out after `SWDRAW_TIMEOUT_S`, default 600 s).
+A stdio MCP server for the swdraw tools. Each tool runs `python -m swdraw <command>` in a new
+subprocess and returns the JSON result. A COM error or a stuck SolidWorks call can't take the
+server down. Calls time out after `SWDRAW_TIMEOUT_S` (default 600 s).
 
 ## Run it
 
@@ -10,10 +10,10 @@ the server down (calls time out after `SWDRAW_TIMEOUT_S`, default 600 s).
 uv run --directory C:\path\to\swdraw --extra mcp --extra preview python mcp_server/server.py
 ```
 
-Register it with a client in one go: `uv run python -m swdraw setup <claude-code|claude-desktop|codex> --apply`
-(see the main README). Or install the `.mcpb` in Claude Desktop.
+To register it with a client, run `uv run python -m swdraw setup <claude-code|claude-desktop|codex> --apply`
+(see the main README), or install the `.mcpb` in Claude Desktop.
 
-For a manual client config:
+Manual client config:
 
 ```json
 {
@@ -39,7 +39,7 @@ For a manual client config:
 
 ## Tools
 
-See `../capabilities.yaml` for every tool, its arguments, whether it needs SolidWorks and what it
-changes. Pass absolute paths: the server's working directory is the repository folder.
+`../capabilities.yaml` lists every tool, its arguments, whether it needs SolidWorks and what it
+changes. Use absolute paths, because the server runs from the repo folder.
 
-The server supports the MCP Python SDK 1.x (`FastMCP`) and 2.x (`MCPServer`).
+Works with MCP Python SDK 1.x (`FastMCP`) and 2.x (`MCPServer`).

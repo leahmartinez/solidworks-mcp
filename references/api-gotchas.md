@@ -2,8 +2,7 @@
 
 Read this when a SolidWorks call misbehaves or before changing code that talks to SolidWorks.
 
-Lessons from building drawings through the SolidWorks API from Python. swdraw already handles
-everything here; this file explains why the code looks the way it does.
+swdraw already handles all of these. This explains why the code looks the way it does.
 
 ## Python and COM
 

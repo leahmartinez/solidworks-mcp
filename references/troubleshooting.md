@@ -7,7 +7,7 @@ Read this when a build reports failures or the sheet looks wrong.
 | `failed_dimensions`: selection failed | pick point not on an edge in that view, or the view has no geometry yet | `swdraw_diagnostics views` to confirm the view and `model_y_up`; check the point against the part; add `alternatives` |
 | `wrong_value_dimensions` | the pick hit a neighbouring edge | move the pick to the middle of the intended edge, add an alternative pair, re-run `clear,dimensions,...` |
 | tolerance shows ±0.00 | tolerance write failed | the result's `tolerance` field is empty; check `type`, `lower`, `upper` (mm, `lower` signed) |
-| section comes out upside down | cut from the "wrong" side | `from_views: [opposite, original]`, `require_upright: true`, an `alt_at` on the other side of the line |
+| section comes out upside down | cut from the wrong side | `from_views: [opposite, original]`, `require_upright: true`, an `alt_at` on the other side of the line |
 | section or detail view is blank, picks miss | views not regenerated | the builder regenerates before dimensions; re-run from `dimensions` if views were edited by hand |
 | title-block fields don't change (custom-properties mode) | template uses `$PRPSHEET:` (part properties) for that field | list the field under `model_fields` in the title-block profile |
 | title-block fields don't change (placeholder mode) | position or placeholder text doesn't match | `swdraw_diagnostics annotations` on a blank drawing for the real positions; adjust `at` / `tolerance_mm` |

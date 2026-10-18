@@ -37,9 +37,9 @@ view_label_prefixes: [SECTION, DETAIL, SCALE, VIEW]
 date_format: "%d/%m/%Y"
 ```
 
-The `fonts` step applies this to the document text defaults and to every annotation outside the
-sheet format. It captures the title-block notes' font, height and bold first and restores them
-afterwards, because changing document defaults resizes those too.
+The `fonts` step applies this to the document text defaults and every annotation outside the sheet
+format. Changing the defaults also resizes title-block notes, so it saves their font, height and
+bold first and puts them back after.
 
 A spec can override any key for one drawing:
 
@@ -54,7 +54,7 @@ spec's `title_block` values.
 
 ## Title block: `title_block.yaml`
 
-Two ways to fill a title block. Pick one with `mode`.
+There are two ways to fill a title block. Pick one with `mode`.
 
 ### `custom_properties` (recommended)
 
@@ -90,10 +90,10 @@ custom_properties:
 matches these names. For an existing template, open the sheet format, double-click each field
 and link it to a property (*Link to Property*), then list the names here.
 
-Fields your template links with `$PRPSHEET:` (properties of the model shown on the sheet) belong
-on the part, not the drawing. List them under `model_fields`; swdraw writes them to the model in
-the first view, which modifies that part, though it doesn't save it. The bundled template reads
-part number, description, material, finish, project and parent assembly this way:
+Fields linked with `$PRPSHEET:` read from the part shown on the sheet, not the drawing. List them
+under `model_fields` and swdraw writes them to the model in the first view. That changes the part
+but doesn't save it. The bundled template reads part number, description, material, finish,
+project and parent assembly this way:
 
 ```yaml
   model_fields: [part_no, description, material, finish, project, parent]
@@ -103,7 +103,7 @@ part number, description, material, finish, project and parent assembly this way
 
 ### `placeholder_notes`
 
-The sheet has plain notes ("PART-NO", "NAME", "DD/MM/YYYY") and swdraw replaces each one by
+The sheet has plain notes (`PART-NO`, `NAME`, `DD/MM/YYYY`) and swdraw replaces each one by
 position. Use this for templates you can't change.
 
 ```yaml
@@ -127,14 +127,14 @@ placeholder_notes:
   see_note_marker: "SEE NOTE"
 ```
 
-- `at` is in **sheet millimetres from the bottom-left corner**, measured at the note's anchor (what
-  `Annotation.GetPosition` returns, which is the top-left of the text). The easiest way to get the
-  numbers for your template: open a blank drawing and run `uv run python -m swdraw diag annotations`. The
-  sheet-level entries list each note's position.
+- `at` is in **sheet mm from the bottom-left corner**, at the note's anchor (the top-left of the
+  text, which is what `Annotation.GetPosition` returns). To get the numbers for your template,
+  open a blank drawing and run `uv run python -m swdraw diag annotations`. The sheet-level entries
+  show each note's position.
 - A note is replaced only while it still shows its placeholder (or is blank), so running twice
   doesn't overwrite real values. Pass `overwrite` in code if you need to.
-- Same-text fields (two "NAME" notes, the "FINISH / TREATMENT" label and its value) are told apart by
-  position. Set `tolerance_mm` smaller than the gap between them.
+- Fields with the same text (two `NAME` notes, the `FINISH / TREATMENT` label and its value) are
+  told apart by position. Set `tolerance_mm` smaller than the gap between them.
 - The REV box is any one- or two-letter note right of `min_x` and below `max_y`.
 - `finish_note` in `revise` rewrites any title-block text containing `SEE NOTE` to point at the
   given note number.
@@ -174,6 +174,5 @@ properties_static: {}       # extra values for the templates above, e.g. {projec
   `drawing_properties` to the part and drawing.
 - The register's Numbering tab is generated from this file.
 
-A different scheme works as long as it can be written as a pattern with `{product}`,
-`{discipline}` and `{number}`. For example, `"{discipline}{number:05d}"` with an empty product
-also works.
+Any scheme works if you can write it as a pattern using `{product}`, `{discipline}` and `{number}`.
+`{product}` is optional, so `"{discipline}{number:05d}"` works too.

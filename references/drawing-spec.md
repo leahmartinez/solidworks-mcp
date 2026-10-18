@@ -33,7 +33,7 @@ marked `mismatch: true` and listed in `check.wrong_value_dimensions`.
   part was built from), never by eye from the sheet.
 - Pick the middle of an edge, away from corners where two edges meet. A point within 0.2 mm of
   another edge can select the wrong one; give such dimensions an `alternatives` pair.
-- `text_at` is in the same model space, so "above the part" means a larger model Y in a view where
+- `text_at` is in the same model space, so 'above the part' means a larger model Y in a view where
   +Y is up. Check orientation with `swdraw_diagnostics views` (`model_y_up`).
 - Sheet positions (`at`) on an A3 sheet: 420 x 297 mm. Keep views and notes clear of the title
   block and revision table (bottom right) and any confidentiality box (bottom left).
