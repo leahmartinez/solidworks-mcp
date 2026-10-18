@@ -1,6 +1,7 @@
 # swdraw
 
-Turn a SolidWorks part into a finished, checked engineering drawing. Ask Claude, or run it yourself.
+Turn a SolidWorks part into a finished, checked engineering drawing, and change parts from a spec
+with the same checks. Ask Claude, or run it yourself.
 
 ## From part to drawing
 
@@ -15,9 +16,22 @@ Turn a SolidWorks part into a finished, checked engineering drawing. Ask Claude,
 5. **Keep it current.** Issue revisions, renumber parts without breaking references, tidy the
    working folder and update the drawing register.
 
-**Planned:** 3D modelling, meaning building and editing parts from a spec (sketches, extrudes,
-revolves, cuts, holes, fillets, dimension changes) with the same self-checks. For now, the example
-script is the only modelling code.
+## Editing parts
+
+Change an existing part from a short YAML spec: dimensions by full name (`D1@Sketch1`), global
+variables, equations, the configuration or a design-table row. swdraw rebuilds the part, then
+checks it:
+
+- every changed dimension reads back what you set
+- no feature has a rebuild error
+- volume, mass, surface area and bounding box match your `expect` values
+
+If anything fails, nothing is saved. With `save: true` it copies the original to
+`<name>.bak.SLDPRT` first. `model inspect` lists what a part has and writes a spec to start from.
+See [references/modelling.md](references/modelling.md).
+
+**Planned:** building parts from a spec (sketches, extrudes, revolves, cuts, holes, fillets,
+chamfers, patterns), with an `expect` after each feature.
 
 ## Tools
 
@@ -31,6 +45,8 @@ script is the only modelling code.
 | `register` | drawing register workbook: Register, Revision History (inputs) and Numbering tabs |
 | `number` | check part numbers and allocate the next part or assembly number |
 | `diag` | read-only probes: views and transforms, selection, annotations, file references |
+| `model inspect` | read-only: a part's dimensions, global variables, equations, configurations, design table, rebuild errors and mass properties, plus a spec stub |
+| `model edit` | change a part from a spec, rebuild, self-check; saves after a backup only with `save: true` |
 
 Run it from the command line, from Python, or from Claude through the MCP server.
 
@@ -40,7 +56,8 @@ Run it from the command line, from Python, or from Claude through the MCP server
 - [uv](https://docs.astral.sh/uv/) (`winget install astral-sh.uv`). It installs Python and the
   dependencies on first run.
 
-`validate`, `tidy`, `register`, `number`, `setup` and the tests don't need SolidWorks.
+`validate`, `model validate`, `tidy`, `register`, `number`, `setup` and the tests don't need
+SolidWorks.
 
 ## Install
 
@@ -58,6 +75,8 @@ Then connect it to your AI client.
 - **Output folder**: traces, results, PDFs and PNG previews
 - **Profiles folder** (optional): your `house_style.yaml`, `title_block.yaml`, `numbering.yaml`
 - **Scripts folder** (optional): the only folder `swdraw_run_script` can run scripts from
+- **Part backup folder** (optional): where part edits copy the original before saving (default:
+  next to the part)
 
 **One command from the clone.** `setup` shows the change first. Add `--apply` to make it. Config
 files get a `.bak` backup.
@@ -104,6 +123,12 @@ To re-run part of the build, include `clear` or you'll get everything twice:
 
 ```powershell
 uv run python -m swdraw build --spec bush.drawing.yaml --steps clear,dimensions,gdt,leader_notes,notes,fonts,export
+```
+
+Widen the flange to 42 mm and check the new volume (add `--save` to keep it):
+
+```powershell
+uv run python -m swdraw model edit --spec examples/flanged_bush/bush.edit.yaml
 ```
 
 Issue revision B:
@@ -154,15 +179,16 @@ Every run logs to `swdraw.log` in the output folder.
 | Path | What's there |
 |---|---|
 | `SKILL.md`, `SUBSKILLS.md` | instructions for Claude: which tool when, which reference to read |
-| `references/` | drawing specs, profiles, workflows, troubleshooting, SolidWorks API gotchas |
+| `references/` | drawing specs, part editing, profiles, workflows, troubleshooting, SolidWorks API gotchas |
 | `subskills/engineering-drawing/` | end-to-end drawing workflow and a spec template |
+| `subskills/part-editing/` | part-editing workflow and an edit spec template |
 | `capabilities.yaml` | every MCP tool with its arguments (generated) |
-| `swdraw/` | the Python package: COM helpers, drawing builder, revision, renumber, notes, tidy, register |
+| `swdraw/` | the Python package: COM helpers, drawing builder, part editing (`swdraw.model`), revision, renumber, notes, tidy, register |
 | `mcp_server/` | the MCP server (stdio) |
 | `manifest.json` | the Claude Desktop extension manifest |
 | `profiles/` | example house style, title block and numbering profiles |
 | `templates/` | A3 sheet-format macro and a feature-dump macro (VBA source) |
-| `examples/flanged_bush/` | worked example: part generator and drawing spec |
+| `examples/flanged_bush/` | worked example: part generator, edit spec and drawing spec |
 | `tests/` | tests against a fake SolidWorks API |
 | `.github/workflows/` | CI on Windows and Linux; release builds the `.mcpb` from a tag |
 
@@ -178,6 +204,8 @@ The tests run against a fake SolidWorks API (`tests/fakes.py`). They cover:
 - title-block matching, revisions and notes
 - tidy, the register (including formula results when LibreOffice is installed) and numbering
 - spec validation and the example's geometry
+- part edits: globals, equations, dimensions, configurations, design tables, read-back, rebuild
+  errors, `expect`, revert, backup and save
 
 [CONTRIBUTING.md](CONTRIBUTING.md) lists what they can't cover. CI runs them on Windows and Linux
 on every push.

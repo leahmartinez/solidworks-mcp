@@ -15,6 +15,12 @@ Read this when a build reports failures or the sheet looks wrong.
 | dangling centre marks remain after `clear` | API can't select them | delete them by hand; `swdraw_diagnostics annotations` lists them (`dangling: true`) |
 | renumber: "drawing does not reference the new part" | drawing wasn't open when the part was saved as, or loaded a different copy | open the drawing, then re-run; never rename files in Explorer |
 | tidy/renumber: permission or "in use" errors | SolidWorks or Explorer holds the file | close the documents (and Explorer windows on the folder), wait, re-run |
+| model edit: "driven by equation" | an equation sets that dimension | change the global variable or the equation (`inspect` shows which) |
+| model edit: value "reads ... after the rebuild" | an equation, design table or configuration overrides it | `swdraw_model_inspect`; change what drives it, or the design-table row |
+| model edit: `rebuild_errors` | the new values break a feature (wall too thin, sketch can't solve) | look at the feature in SolidWorks; `on_failure: revert` puts the old values back |
+| model edit: `failed_expect` | the part changed, but not as expected | compare `measured.before` and `after`; check the expected values and the change |
+| model edit: not saved, "unsaved changes" | the part was already modified before the edit | save or discard those changes in SolidWorks first, or `allow_unsaved_changes: true` if the user agrees |
+| model edit: mass is wrong | no material assigned (default density) | assign the material in SolidWorks, or check volume instead |
 | MCP tool times out | a SolidWorks dialog is waiting for input | dismiss it in SolidWorks; raise `SWDRAW_TIMEOUT_S` for very large drawings |
 | tool returns `exit_code` with `stderr` | Python error before a result was printed | read `stderr` and `swdraw.log` in the output folder |
 

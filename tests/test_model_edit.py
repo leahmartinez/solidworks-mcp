@@ -395,3 +395,8 @@ def test_mcp_model_validate():
     server = importlib.import_module("mcp_server.server")
     res = server.swdraw_model_validate(os.path.join(EX, "bush.edit.yaml"))
     assert res == {"ok": True, "problems": []}
+
+
+def test_edit_template_is_valid():
+    tpl = load_file(os.path.join(ROOT, "subskills", "part-editing", "edit_template.yaml"))
+    assert validate_edit_spec(tpl) == []

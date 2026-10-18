@@ -1,0 +1,28 @@
+# Part edit spec template. See references/modelling.md for every key.
+# Get the names and current values from swdraw model inspect; keep only what changes.
+
+part: C:/path/to/ACME1-MEC-21xx.SLDPRT     # absolute; or leave out to use the active part
+
+# configuration: Default
+# apply_to: this                           # dimensions in this configuration, or all
+
+globals:                                   # preferred: what the designer meant to be edited
+  example_d: 42mm
+
+# equations:
+#   example_r@Sketch1: '"example_d" / 2'
+
+# dimensions:                              # only ones no equation drives
+#   D1@Sketch1: 30                         # mm, degrees or a count; or "1.5in", "30deg"
+
+# design_table:
+#   row: Large
+#   set: {D1@Sketch1: 42}
+
+expect:                                    # what the part should measure AFTER the change
+  volume_mm3: {value: 0, tol: 0.5}
+  bbox_mm: {value: [0, 0, 0], tol: 0.01}
+  # mass_g: {value: 0, tol_pct: 0.5}       # only with a material assigned
+
+save: false                                # true only once a run without saving has passed
+on_failure: keep                           # keep or revert

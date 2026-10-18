@@ -35,6 +35,7 @@ Manual client config:
 | `SWDRAW_OUTPUT_DIR` | traces, JSON results, PDF and PNG exports (default `~/swdraw-output`) |
 | `SWDRAW_PROFILES` | folder with your `house_style`, `title_block`, `numbering` profiles |
 | `SWDRAW_SCRIPTS_DIR` | the only folder `swdraw_run_script` may run `.py` files from |
+| `SWDRAW_BACKUP_DIR` | where `swdraw_model_edit` copies a part before saving it (default: next to the part) |
 | `SWDRAW_TIMEOUT_S` | per-call timeout in seconds |
 
 ## Tools
