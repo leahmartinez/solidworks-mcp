@@ -1,0 +1,24 @@
+# Edit spec for the flanged bush made by make_part.py: widen the flange from 40 to 42 mm.
+#
+# The diameters are global variables (flange_d, body_d, bore_d) that drive the sketch radii
+# through equations, so change the global, not flange_r@Profile (swdraw refuses a dimension that
+# an equation drives). length@Profile, flange_t@Profile and chamfer@Profile are plain dimensions.
+#
+# expect values are for the edited part. tests/test_model_edit.py works them out from
+# bush.params.yaml with the flange at 42 mm, so they stay in step with the geometry.
+
+part: ~/swdraw-example/ACME1-MEC-2101.SLDPRT
+
+globals:
+  flange_d: 42mm
+
+# dimensions:
+#   flange_t@Profile: 6           # mm
+
+expect:
+  volume_mm3: {value: 11711.73, tol: 0.5}
+  surface_area_mm2: {value: 5841.53, tol: 0.5}
+  bbox_mm: {value: [42, 25, 42], tol: 0.01}    # flange across X and Z, length along the Y axis
+
+save: false                       # true: copy the part to ACME1-MEC-2101.bak.SLDPRT, then save
+on_failure: keep
