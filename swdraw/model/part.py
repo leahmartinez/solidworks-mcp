@@ -13,8 +13,8 @@ from .. import com
 from ..runner import log
 from .spec import ANGULAR, INTEGER, LINEAR, from_system, unit_of
 
-# swDimensionParamType_e
-_DIM_KIND = {1: LINEAR, 2: ANGULAR, 3: INTEGER}
+# swDimensionParamType_e as SolidWorks 2025 returns it (0 and 1 seen; 2 for counts assumed)
+_DIM_KIND = {0: LINEAR, 1: ANGULAR, 2: INTEGER}
 # swSetValueInConfiguration_e
 SET_THIS_CONFIG, SET_ALL_CONFIGS = 1, 2
 # swInConfigurationOpts_e
@@ -109,15 +109,30 @@ def get_dimension(doc, full_name: str):
         return None
 
 
+def full_name(dim, feature_name: str) -> str:
+    """``D1@Sketch1``: from ``FullName`` (``D1@Sketch1@Part1.Part``) without the document.
+
+    A feature also lists the dimensions of the sketch it absorbed, so the feature being walked is
+    not always the owner; ``FullName`` is. ``feature_name`` is only the fallback.
+    """
+    try:
+        parts = str(com.call(dim, "FullName")).split("@")
+        if len(parts) >= 2 and parts[0] and parts[1]:
+            return f"{parts[0]}@{parts[1]}"
+    except Exception:
+        pass
+    return f"{com.call(dim, 'Name')}@{feature_name}"
+
+
 def dimensions(doc) -> List[Dict[str, Any]]:
-    """Every dimension on every feature: full name, value, unit, kind and whether it is read-only."""
+    """Every dimension on every feature, once each: full name, value, unit, kind, read-only."""
     out, seen = [], set()
     for f in features(doc):
         fname = str(com.call(f, "Name"))
         dd, guard = com.call(f, "GetFirstDisplayDimension"), 0
         while dd is not None and guard < 1000:
             d = dd.GetDimension2(0)
-            name = f"{com.call(d, 'Name')}@{fname}"
+            name = full_name(d, fname)
             if name not in seen:
                 seen.add(name)
                 kind = dim_kind(d)
@@ -200,10 +215,15 @@ def _bare(name: str) -> str:
 
 
 def set_equation(doc, index: int, text: str, all_configs: bool = True) -> Optional[str]:
-    """Replace equation ``index``. Returns the call that worked, or None if the text didn't stick."""
+    """Replace equation ``index``. Returns the call that worked, or None if the text didn't stick.
+
+    The property put comes first: it keeps the equation's configuration setting, and on
+    SolidWorks 2025 ``SetEquationAndConfigurationOption`` returns -1 under late binding whatever
+    it is given. The method is the fallback for builds where the put isn't reachable.
+    """
     mgr = equation_mgr(doc)
     opt = EQ_ALL_CONFIGS if all_configs else EQ_THIS_CONFIG
-    for how in ("SetEquationAndConfigurationOption", "Equation"):
+    for how in ("Equation", "SetEquationAndConfigurationOption"):
         try:
             if how == "Equation":
                 com.put(mgr, "Equation", index, text)
@@ -315,13 +335,17 @@ def set_design_table(doc, row_name: str, values: Dict[str, Any]) -> List[Dict[st
 
 # --------------------------------------------------------------------------- mass properties
 def material(doc) -> Optional[str]:
-    """Material name, or None if none is assigned (mass then uses SolidWorks' default density)."""
+    """Material name, or None if none is assigned (mass then uses SolidWorks' default density).
+
+    ``MaterialIdName`` can name a material that isn't applied, so this asks
+    ``GetMaterialPropertyName2`` for the active configuration.
+    """
     try:
-        ident = str(com.call(doc, "MaterialIdName") or "")
-    except Exception:
+        name = doc.GetMaterialPropertyName2("", com.byref_str())
+    except Exception as exc:
+        log(f"  GetMaterialPropertyName2: {exc}")
         return None
-    parts = ident.split("|")
-    return (parts[1] if len(parts) > 1 else ident) or None
+    return str(name or "").strip() or None
 
 
 def mass_properties(doc) -> Dict[str, Any]:

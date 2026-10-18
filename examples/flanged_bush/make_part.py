@@ -146,7 +146,7 @@ def main():
                                                False, False, 0, 0, 0, 0, 0, True, True, True)
     if feat is None:
         raise SystemExit("Revolve failed; check the sketch is closed and has one centreline.")
-    mgr = part.GetEquationMgr()
+    mgr = sw.call(part, "GetEquationMgr")       # a dispatch object, not a method, under late binding
     rep["equations"] = [t for t in equations(p) if mgr.Add2(-1, t, True) >= 0]
     part.ForceRebuild3(False)
     cpm = part.Extension.CustomPropertyManager("")

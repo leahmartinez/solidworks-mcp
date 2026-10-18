@@ -7,7 +7,7 @@ import os
 import sys
 
 import pytest
-from fakes import (DIM_ANGULAR, FakeDesignTable, FakeFeature, FakeModelDim, FakeModelPart)
+from fakes import (DIM_ANGULAR, FakeDesignTable, FakeFeature, FakeModelDim, FakeModelDisplayDim, FakeModelPart)
 
 from swdraw import cli, com, runner
 from swdraw.config import load_file
@@ -70,6 +70,7 @@ def bush(tmp_path=None, params=PARAMS):
     dims.append(FakeModelDim("chamfer_angle", math.radians(45), kind=DIM_ANGULAR))
     rev = part.add_feature(FakeFeature("Revolve1", "Revolution", [FakeModelDim("D1", 2 * math.pi, kind=DIM_ANGULAR)]))
     part.add_feature(FakeFeature("Profile", "ProfileFeature", dims), parent=rev)
+    rev.display += [FakeModelDisplayDim(d) for d in dims]     # SolidWorks lists the absorbed sketch's too
     part.ForceRebuild3(False)
     part.dirty = False
     return part
@@ -351,6 +352,8 @@ def test_inspect_lists_everything_and_the_stub_round_trips():
     part = bush()
     rep = inspect(part)
     names = {d["name"]: d for d in rep["dimensions"]}
+    assert len(names) == len(rep["dimensions"]) == 8 and not [n for n in names if n.endswith("@Revolve1") and n != "D1@Revolve1"]
+    assert names["chamfer_angle@Profile"]["kind"] == "angular"
     assert names["flange_r@Profile"]["driven_by_equation"] and not names["length@Profile"]["driven_by_equation"]
     assert names["D1@Revolve1"]["unit"] == "deg" and names["D1@Revolve1"]["value"] == pytest.approx(360)
     assert [g["name"] for g in rep["globals"]] == ["flange_d", "body_d", "bore_d"]
