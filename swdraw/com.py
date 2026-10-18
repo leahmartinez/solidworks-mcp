@@ -162,6 +162,12 @@ def byref_bool(value: bool = False):
     return _variant(p.VT_BYREF | p.VT_BOOL, value)
 
 
+def byref_str(value: str = ""):
+    """A by-reference string, e.g. the database argument of ``GetMaterialPropertyName2``."""
+    p = _pythoncom()
+    return _variant(p.VT_BYREF | p.VT_BSTR, value)
+
+
 def put(obj, name: str, *args) -> None:
     """Set a property that takes arguments (``EquationMgr.Equation(i) = text``).
 

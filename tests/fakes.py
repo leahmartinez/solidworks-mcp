@@ -339,7 +339,7 @@ class FakeDrawing:
 # A fake part: dimensions on features, an equation manager that really evaluates its equations on
 # rebuild, configurations, a design table, mass properties from a caller-supplied model, rebuild
 # errors from a caller-supplied rule, and Save3.
-DIM_LINEAR, DIM_ANGULAR, DIM_INTEGER = 1, 2, 3
+DIM_LINEAR, DIM_ANGULAR, DIM_INTEGER = 0, 1, 2       # what SolidWorks 2025 returns from GetType
 _EQ = re.compile(r'^\s*"([^"]+)"\s*=\s*(.*?)\s*$')
 
 
@@ -350,6 +350,11 @@ class FakeModelDim:
         self.Name, self.SystemValue, self.kind, self.ReadOnly = name, value_si, kind, read_only
         self.refuse = False
         self.set_calls = []
+        self.owner = None                                 # the feature that owns it
+
+    @property
+    def FullName(self):
+        return f"{self.Name}@{self.owner}@Part1.Part"
 
     def GetType(self):
         return self.kind
@@ -374,6 +379,8 @@ class FakeFeature:
     def __init__(self, name, type_name, dims=()):
         self.Name, self.type_name = name, type_name
         self.display = [FakeModelDisplayDim(d) for d in dims]
+        for d in dims:
+            d.owner = d.owner or name
         self.subs: List["FakeFeature"] = []
         self.next = self.next_sub = None
         self.error = (0, False)
@@ -495,7 +502,7 @@ class FakeModelPart:
         self.dirty = self.read_only = False
         self.saves = self.rebuilds = 0
         self.density_kg_m3 = 1000.0
-        self.MaterialIdName = ""
+        self.material = ""
         self.overrides: Dict[str, float] = {}             # dimension -> mm, re-applied on every rebuild
         self.Extension = SimpleNamespace(CreateMassProperty=self._mass)
 
@@ -519,7 +526,7 @@ class FakeModelPart:
     def dim(self, full_name):
         for f in self.all_features():
             for d in f.dims:
-                if f"{d.Name}@{f.Name}".lower() == full_name.lower():
+                if f"{d.Name}@{d.owner}".lower() == full_name.lower():
                     return d
         return None
 
@@ -572,6 +579,9 @@ class FakeModelPart:
 
     def Parameter(self, name):
         return self.dim(name)
+
+    def GetMaterialPropertyName2(self, config, database):
+        return self.material
 
     def GetEquationMgr(self):
         return self.eq
