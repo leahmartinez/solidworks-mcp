@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swdraw"
+version = "0.1.0"
+description = "Spec-driven SolidWorks drawings with self-checking dimensions, revisions, reference-safe renumbering and a drawing register"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Leah Martinez"}]
+requires-python = ">=3.10"
+keywords = ["solidworks", "cad", "drawing", "gd&t", "automation", "mcp"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = [
+  "pyyaml>=6",
+  "openpyxl>=3.1",
+  "pywin32>=306; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.2"]
+preview = ["pymupdf>=1.23"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+swdraw = "swdraw.cli:main"
+
+[tool.setuptools]
+packages = ["swdraw", "swdraw.drawing"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

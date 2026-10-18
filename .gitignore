@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+*.mcpb
+swdraw-output/
+
+# never commit native CAD files or exports from a real installation
+*.sldprt
+*.SLDPRT
+*.sldasm
+*.SLDASM
+*.slddrw
+*.SLDDRW
+*.slddrt
+*.drwdot
+*.prtdot
+*.asmdot
+*.swp
+*.step
+*.stp
+*.STEP
+*.pdf
+~$*
