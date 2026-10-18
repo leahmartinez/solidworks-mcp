@@ -43,10 +43,11 @@ Only real SolidWorks shows these:
 - Save As order, file locks, reference re-pointing, `GetDocumentDependencies2`
 - PDF export and the example's `make_part.py` (revolve arguments, template selection, sketch
   relations, named dimensions and equations)
-- part editing: `SetSystemValue3` with an empty configuration list, `GetType` values,
-  `SetEquationAndConfigurationOption` and its configuration option, `GetErrorCode2`'s by-reference
-  argument, design-table `SetEntryValue` and `UpdateTable`, `CreateMassProperty2`, `GetPartBox`,
-  `MaterialIdName` and `Save3`
+- part editing against a real part: dimension names and types, setting and reading back
+  dimensions and equations, rebuild errors, mass properties, the bounding box, material and
+  `Save3`. These were checked on SolidWorks 2025 with the flanged bush (`make_part.py`, inspect,
+  the example edit with and without saving, a breaking edit with revert, and an equation-driven
+  dimension). Design-table edits and integer (count) dimensions haven't been run on a real part yet.
 
 If you change any of these, run the flanged bush example end to end on a real install. Put the
 SolidWorks version in the pull request.

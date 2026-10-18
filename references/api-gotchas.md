@@ -85,27 +85,36 @@ swdraw already handles all of these. This explains why the code looks the way it
 ## Parts and modelling
 
 - **Dimension values are in system units.** `Dimension.SystemValue` and `SetSystemValue3` work in
-  metres and radians whatever the document units are. `GetType` (`swDimensionParamType_e`) tells
-  linear (1), angular (2) and integer (3, pattern counts) apart.
-- **Full names**: `ModelDoc2.Parameter("D1@Sketch1")` finds a dimension. `inspect` builds the name
-  from the dimension's `Name` and its feature's `Name`, so the names it lists are the ones
-  `Parameter` takes.
+  metres and radians whatever the document units are. `GetType` tells them apart: on SolidWorks
+  2025 it returns 0 for linear and 1 for angular (swdraw assumes 2 for counts).
+- **Full names**: `ModelDoc2.Parameter("D1@Sketch1")` finds a dimension. A feature's
+  `GetFirstDisplayDimension` also lists the dimensions of the sketch it absorbed, so naming them
+  after the feature being walked gives duplicates such as `D1@Revolve1` that `Parameter` can't
+  find. Take the name from `Dimension.FullName` (`D1@Sketch1@Part1.Part`) without the last part.
 - **Check `SetSystemValue3`'s status.** It returns `swSetValueReturnStatus_e` (0 is success) and
   doesn't raise. Don't fall back to setting `SystemValue` after a refusal: that bypasses the
   check. The value is only final after the rebuild, so read it back then.
 - **Equations win.** A dimension driven by an equation takes the equation's value at the next
   rebuild, whatever you set. A design table or configuration can do the same. swdraw refuses
   equation-driven dimensions and reads every value back.
+- **Get the equation manager with `swdraw.com.call(doc, "GetEquationMgr")`.** Late binding hands
+  it back as a dispatch object, and calling `doc.GetEquationMgr()` fails with *Member not found*.
 - **Equations by index**: `EquationMgr.Equation(i)` is a property that takes an argument, which late
-  binding can't set. Use `SetEquationAndConfigurationOption`, or a property put through
-  `IDispatch::Invoke` (`swdraw.com.put`). If SolidWorks doesn't like an expression, the text is
-  left as it was, so read it back. Call `EvaluateAll` before rebuilding.
+  binding can't set. Use a property put through `IDispatch::Invoke` (`swdraw.com.put`); it keeps
+  the equation's configuration setting. On SolidWorks 2025, `SetEquationAndConfigurationOption`
+  returns -1 and changes nothing under late binding, whatever the option or configuration list.
+  If SolidWorks doesn't like an expression, the text is left as it was, so read it back. Call
+  `EvaluateAll` before rebuilding.
 - **Global variables without units** are in the document's units. Write `"flange_d" = 42mm`.
 - **Rebuild errors**: `ForceRebuild3` can return True while features have errors. Walk the features
   (and sub-features, where absorbed sketches live) and call `GetErrorCode2`. Its `IsWarning` is a
   by-reference bool (`swdraw.com.byref_bool()`).
 - **Mass properties**: set `UseSystemUnits = True` on the mass property object. Volume comes in m³,
-  mass in kg, area in m². With no material assigned, mass uses SolidWorks' default density.
+  mass in kg, area in m². With no material assigned, mass uses SolidWorks' default density
+  (1000 kg/m³).
+- **Which material?** `MaterialIdName` can name a material (for example the template's) that isn't
+  applied. `GetMaterialPropertyName2("", database)` is right; the database is a by-reference
+  string (`swdraw.com.byref_str()`). Passing a plain `""` gives *Type mismatch*.
 - **`GetPartBox(True)`** gives the exact box along the model axes. `False` is a quicker, looser
   approximation.
 - **Adding dimensions by API opens the Modify dialog** if *Input dimension value*
