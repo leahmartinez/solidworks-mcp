@@ -1,10 +1,10 @@
 {
   "manifest_version": "0.3",
   "name": "swdraw",
-  "display_name": "swdraw: SolidWorks drawings",
+  "display_name": "swdraw: SolidWorks drawings and parts",
   "version": "0.2.0",
-  "description": "Spec-driven SolidWorks drawings with self-checking dimensions, revisions, reference-safe renumbering, folder tidy and a drawing register.",
-  "long_description": "Local Windows MCP server. Builds the active SolidWorks drawing from a YAML spec (views, sections, details, dimensions checked against expected values, tolerances, GD&T, notes, title block, house-style fonts, PDF/PNG export), applies revisions, renumbers parts and drawings without breaking references, tidies working folders and generates a drawing register workbook. Requires a local SolidWorks installation and uv (https://docs.astral.sh/uv/), which installs Python and the dependencies on first run.",
+  "description": "Spec-driven SolidWorks drawings with self-checking dimensions, part edits checked after the rebuild, revisions, reference-safe renumbering, folder tidy and a drawing register.",
+  "long_description": "Local Windows MCP server. Builds the active SolidWorks drawing from a YAML spec (views, sections, details, dimensions checked against expected values, tolerances, GD&T, notes, title block, house-style fonts, PDF/PNG export), edits parts from a spec (dimensions, global variables, equations, configurations, design-table rows) and checks them after the rebuild (rebuild errors, volume, mass, surface area, bounding box) before saving with a backup, applies revisions, renumbers parts and drawings without breaking references, tidies working folders and generates a drawing register workbook. Requires a local SolidWorks installation and uv (https://docs.astral.sh/uv/), which installs Python and the dependencies on first run.",
   "author": {
     "name": "Leah Martinez"
   },
@@ -13,6 +13,7 @@
     "solidworks",
     "cad",
     "drawings",
+    "parts",
     "gd&t",
     "automation",
     "mcp"
@@ -37,7 +38,8 @@
         "PYTHONUTF8": "1",
         "SWDRAW_OUTPUT_DIR": "${user_config.output_dir}",
         "SWDRAW_PROFILES": "${user_config.profiles_dir}",
-        "SWDRAW_SCRIPTS_DIR": "${user_config.scripts_dir}"
+        "SWDRAW_SCRIPTS_DIR": "${user_config.scripts_dir}",
+        "SWDRAW_BACKUP_DIR": "${user_config.backup_dir}"
       }
     }
   },
@@ -83,6 +85,18 @@
       "description": "Read-only drawing and reference diagnostics"
     },
     {
+      "name": "swdraw_model_inspect",
+      "description": "Read-only list of a part's dimensions, variables, configurations and mass properties"
+    },
+    {
+      "name": "swdraw_model_validate",
+      "description": "Check a part edit spec without SolidWorks"
+    },
+    {
+      "name": "swdraw_model_edit",
+      "description": "Edit a part from a spec, rebuild and self-check before saving"
+    },
+    {
       "name": "swdraw_run_script",
       "description": "Run your own script from the scripts folder"
     }
@@ -104,6 +118,12 @@
       "type": "directory",
       "title": "Scripts folder",
       "description": "The only folder swdraw_run_script may run scripts from",
+      "required": false
+    },
+    "backup_dir": {
+      "type": "directory",
+      "title": "Part backup folder",
+      "description": "Where swdraw_model_edit copies a part before saving it (default: next to the part, as <name>.bak.SLDPRT)",
       "required": false
     }
   },

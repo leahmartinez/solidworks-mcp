@@ -7,6 +7,7 @@ Environment (set by the extension's user config, or by hand):
     SWDRAW_OUTPUT_DIR    traces, results, PDFs and PNG previews
     SWDRAW_PROFILES      folder with your house_style / title_block / numbering profiles
     SWDRAW_SCRIPTS_DIR   the only folder swdraw_run_script may run scripts from
+    SWDRAW_BACKUP_DIR    where swdraw_model_edit backs up a part before saving (default: next to it)
     SWDRAW_TIMEOUT_S     per-call timeout (default 600)
 """
 from __future__ import annotations
@@ -126,6 +127,32 @@ def swdraw_number(action: str, args: Dict[str, Any]) -> Dict[str, Any]:
 def swdraw_diagnostics(what: str, args: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Read-only probes of the active drawing: 'views', 'selection', 'annotations'; or 'refs' with args.paths."""
     return _run(["diag", what], args or {})
+
+
+@mcp.tool()
+def swdraw_model_inspect(part_path: Optional[str] = None) -> Dict[str, Any]:
+    """Read-only look at a part (the ACTIVE part, or `part_path`, absolute): every dimension by full name
+    (D1@Sketch1) with its value and whether an equation drives it, global variables, equations,
+    configurations, design table, features with rebuild errors, mass properties and bounding box (mm).
+    `spec` in the result is a ready-to-edit spec with the current values; `spec_file` is the same as YAML."""
+    return _run(["model", "inspect"], {"part": part_path} if part_path else {})
+
+
+@mcp.tool()
+def swdraw_model_validate(spec_path: str) -> Dict[str, Any]:
+    """Check a part edit spec (YAML/JSON, absolute path) for unknown keys, bad values or units and `expect`
+    entries without a tolerance. No SolidWorks needed."""
+    return _run(["model", "validate", "--spec", spec_path])
+
+
+@mcp.tool()
+def swdraw_model_edit(spec_path: str, save: Optional[bool] = None) -> Dict[str, Any]:
+    """Edit a part from a spec: design-table cells, configuration, global variables, equations, dimensions
+    (by full name), then rebuild and self-check: values read back, no rebuild errors, and the `expect`
+    volume, mass, surface area and bounding box within tolerance. On a failure nothing is saved (`on_failure: revert` puts the old
+    values back). Saves only with save: true (spec, or the `save` argument), after backing up the file.
+    Read result.check: failed_changes, rebuild_errors, failed_expect, saved, backup."""
+    return _run(["model", "edit", "--spec", spec_path], {"save": save} if save is not None else None)
 
 
 @mcp.tool()

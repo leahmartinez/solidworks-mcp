@@ -1,6 +1,7 @@
 """Part editing against a fake part: spec validation, units, globals, equations, dimensions,
 configurations, the design table, the self-check, revert, backup and save, inspect, CLI and MCP."""
 import importlib.util
+import json
 import math
 import os
 import sys
@@ -8,7 +9,7 @@ import sys
 import pytest
 from fakes import (DIM_ANGULAR, FakeDesignTable, FakeFeature, FakeModelDim, FakeModelPart)
 
-from swdraw import com
+from swdraw import cli, com, runner
 from swdraw.config import load_file
 from swdraw.geometry import revolved_area, revolved_volume
 from swdraw.model import backup_path, edit, inspect, validate_edit_spec
@@ -361,3 +362,36 @@ def test_inspect_lists_everything_and_the_stub_round_trips():
     again = edit(stub, doc=part)                          # current values in, nothing changes
     assert again["ok"], again["check"]
     assert again["measured"]["after"]["volume_mm3"] == pytest.approx(rep["measured"]["volume_mm3"])
+
+
+# --------------------------------------------------------------------------- CLI and MCP
+def run_cli(capsys, *argv):
+    code = cli.main(list(argv))
+    return code, runner.extract_result(capsys.readouterr().out)
+
+
+def test_cli_model_validate(capsys):
+    code, res = run_cli(capsys, "model", "validate", "--spec", os.path.join(EX, "bush.edit.yaml"))
+    assert code == 0 and res == {"ok": True, "problems": []}
+
+
+def test_cli_model_edit_and_inspect(capsys, monkeypatch, tmp_path):
+    part = bush(tmp_path)
+    monkeypatch.setattr(P, "open_part", lambda path=None: part)
+    code, res = run_cli(capsys, "model", "edit", "--spec", os.path.join(EX, "bush.edit.yaml"))
+    assert code == 0 and res["check"]["ok"] and not res["check"]["saved"]
+    code, res = run_cli(capsys, "model", "edit", "--spec", os.path.join(EX, "bush.edit.yaml"), "--save")
+    assert not res["check"]["saved"] and "unsaved changes" in res["save"]["error"]   # the first run's edit
+    part = bush(tmp_path)
+    code, res = run_cli(capsys, "model", "edit", "--spec", os.path.join(EX, "bush.edit.yaml"), "--save")
+    assert res["check"]["saved"]
+    code, res = run_cli(capsys, "model", "inspect", "--args", json.dumps({"out": str(tmp_path / "stub.edit.yaml")}))
+    assert code == 0 and res["spec_file"] == str(tmp_path / "stub.edit.yaml")
+    assert validate_edit_spec(load_file(res["spec_file"])) == []
+
+
+def test_mcp_model_validate():
+    pytest.importorskip("mcp")
+    server = importlib.import_module("mcp_server.server")
+    res = server.swdraw_model_validate(os.path.join(EX, "bush.edit.yaml"))
+    assert res == {"ok": True, "problems": []}
