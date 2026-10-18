@@ -156,6 +156,23 @@ def byref_int(value: int = 0):
     return _variant(p.VT_BYREF | p.VT_I4, value)
 
 
+def byref_bool(value: bool = False):
+    """A by-reference bool, e.g. the IsWarning argument of ``Feature.GetErrorCode2``."""
+    p = _pythoncom()
+    return _variant(p.VT_BYREF | p.VT_BOOL, value)
+
+
+def put(obj, name: str, *args) -> None:
+    """Set a property that takes arguments (``EquationMgr.Equation(i) = text``).
+
+    Late binding has no syntax for this, so it goes through ``IDispatch::Invoke`` as a property put;
+    the last argument is the value.
+    """
+    pythoncom = _pythoncom()
+    ole = obj._oleobj_
+    ole.Invoke(ole.GetIDsOfNames(name), 0, pythoncom.DISPATCH_PROPERTYPUT, False, *args)
+
+
 def arr8(values: Iterable[float]):
     """A SAFEARRAY of doubles (view positions, scale ratios)."""
     p = _pythoncom()

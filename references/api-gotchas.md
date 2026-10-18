@@ -82,6 +82,38 @@ swdraw already handles all of these. This explains why the code looks the way it
 - **Notes are positioned by their top-left corner**, which is also what `GetPosition` returns.
 - **Empty note text deletes the note**, so blank a field with a single space.
 
+## Parts and modelling
+
+- **Dimension values are in system units.** `Dimension.SystemValue` and `SetSystemValue3` work in
+  metres and radians whatever the document units are. `GetType` (`swDimensionParamType_e`) tells
+  linear (1), angular (2) and integer (3, pattern counts) apart.
+- **Full names**: `ModelDoc2.Parameter("D1@Sketch1")` finds a dimension. `inspect` builds the name
+  from the dimension's `Name` and its feature's `Name`, so the names it lists are the ones
+  `Parameter` takes.
+- **Check `SetSystemValue3`'s status.** It returns `swSetValueReturnStatus_e` (0 is success) and
+  doesn't raise. Don't fall back to setting `SystemValue` after a refusal: that bypasses the
+  check. The value is only final after the rebuild, so read it back then.
+- **Equations win.** A dimension driven by an equation takes the equation's value at the next
+  rebuild, whatever you set. A design table or configuration can do the same. swdraw refuses
+  equation-driven dimensions and reads every value back.
+- **Equations by index**: `EquationMgr.Equation(i)` is a property that takes an argument, which late
+  binding can't set. Use `SetEquationAndConfigurationOption`, or a property put through
+  `IDispatch::Invoke` (`swdraw.com.put`). If SolidWorks doesn't like an expression, the text is
+  left as it was, so read it back. Call `EvaluateAll` before rebuilding.
+- **Global variables without units** are in the document's units. Write `"flange_d" = 42mm`.
+- **Rebuild errors**: `ForceRebuild3` can return True while features have errors. Walk the features
+  (and sub-features, where absorbed sketches live) and call `GetErrorCode2`. Its `IsWarning` is a
+  by-reference bool (`swdraw.com.byref_bool()`).
+- **Mass properties**: set `UseSystemUnits = True` on the mass property object. Volume comes in m³,
+  mass in kg, area in m². With no material assigned, mass uses SolidWorks' default density.
+- **`GetPartBox(True)`** gives the exact box along the model axes. `False` is a quicker, looser
+  approximation.
+- **Adding dimensions by API opens the Modify dialog** if *Input dimension value*
+  (`swInputDimValOnCreate`, 10) is on, and the call waits for it. Turn it off around
+  `AddDimension2`, then restore it.
+- **`GetSaveFlag()`** is True when the part has unsaved changes. Check it before an edit that will
+  save, or the save includes changes nobody checked.
+
 ## Files and references
 
 - **Reference-safe rename**: Save As the part *while its drawing is open*. The open drawing

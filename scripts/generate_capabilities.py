@@ -14,7 +14,8 @@ sys.path.insert(0, ROOT)
 OUT = os.path.join(ROOT, "capabilities.yaml")
 
 NEEDS_SOLIDWORKS = {"swdraw_build_drawing", "swdraw_revise", "swdraw_renumber", "swdraw_notes",
-                    "swdraw_export_pdf", "swdraw_diagnostics", "swdraw_run_script"}
+                    "swdraw_export_pdf", "swdraw_diagnostics", "swdraw_run_script", "swdraw_model_inspect",
+                    "swdraw_model_edit"}
 CHANGES_FILES = {"swdraw_build_drawing": "the active drawing (not saved)",
                  "swdraw_revise": "the drawing; saves only with save: true",
                  "swdraw_renumber": "renames part and drawing files; supersede moves old files",
@@ -22,6 +23,8 @@ CHANGES_FILES = {"swdraw_build_drawing": "the active drawing (not saved)",
                  "swdraw_export_pdf": "writes PDF/PNG to the output folder",
                  "swdraw_tidy": "moves files unless dry_run (default true)",
                  "swdraw_register": "writes the register workbook",
+                 "swdraw_model_edit": "the part in SolidWorks; saves (after a backup) only with save: true",
+                 "swdraw_model_inspect": "writes the spec stub to the output folder",
                  "swdraw_run_script": "whatever the script does"}
 
 

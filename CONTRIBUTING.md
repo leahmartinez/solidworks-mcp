@@ -25,6 +25,11 @@ Issues and pull requests are welcome. Please:
   formulas (when LibreOffice is installed), numbering, spec validation, the CLI and the MCP
   script-folder guard
 - every pick point in the example spec sitting on the example part's outline
+- part edits against a fake part API whose equations evaluate on rebuild: globals, equations,
+  dimensions (mm, degrees, units), configurations, design-table rows, read-back after the rebuild,
+  equation-driven and read-only dimensions, rebuild errors, `expect` checks, revert, backup and
+  save refusals, `inspect` and its spec stub
+- the example edit spec's expected volume, area and bounding box against the bush geometry
 
 ## What they can't cover
 
@@ -36,7 +41,12 @@ Only real SolidWorks shows these:
 - `InsertGtol` / `InsertDatumTag2` through `IDispatch`, frame symbol codes
 - text format changes, document defaults and their effect on the sheet format
 - Save As order, file locks, reference re-pointing, `GetDocumentDependencies2`
-- PDF export and the example's `make_part.py` (revolve arguments, template selection)
+- PDF export and the example's `make_part.py` (revolve arguments, template selection, sketch
+  relations, named dimensions and equations)
+- part editing: `SetSystemValue3` with an empty configuration list, `GetType` values,
+  `SetEquationAndConfigurationOption` and its configuration option, `GetErrorCode2`'s by-reference
+  argument, design-table `SetEntryValue` and `UpdateTable`, `CreateMassProperty2`, `GetPartBox`,
+  `MaterialIdName` and `Save3`
 
 If you change any of these, run the flanged bush example end to end on a real install. Put the
 SolidWorks version in the pull request.

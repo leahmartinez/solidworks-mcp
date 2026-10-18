@@ -1,7 +1,8 @@
 """Command line: ``python -m swdraw <command> [options]``.
 
-Commands that need SolidWorks: build, revise, renumber, notes, export, diag, run.
-Commands that don't: validate, tidy, register, number, setup.
+Commands that need SolidWorks: build, revise, renumber, notes, export, diag, run, model inspect,
+model edit.
+Commands that don't: validate, tidy, register, number, setup, model validate.
 
 Every command prints one JSON result between SWDRAW_RESULT_BEGIN/END markers.
 """
@@ -116,6 +117,30 @@ def cmd_diag(ns) -> Dict[str, Any]:
             "annotations": dg.annotations_report}[ns.what](dwg)
 
 
+def cmd_model(ns) -> Dict[str, Any]:
+    from .model import part as P
+    from .model import edit, load_spec, validate_edit_spec
+    a = _args(ns)
+    if ns.action in ("validate", "edit") and not ns.spec:
+        raise ValueError(f"model {ns.action} needs --spec")
+    if ns.action == "validate":
+        probs = validate_edit_spec(load_spec(ns.spec))
+        return {"ok": not probs, "problems": probs}
+    if ns.action == "edit":
+        return edit(load_spec(ns.spec), save=True if ns.save else a.get("save"))
+    path = ns.part or a.get("part")
+    rep = P.inspect(P.open_part(os.path.expanduser(path) if path else None))
+    stem = os.path.splitext(os.path.basename(rep["part"]))[0] or "part"
+    out = os.path.expanduser(a.get("out") or os.path.join(runner.output_dir(), f"{stem}.edit.yaml"))
+    import yaml
+    with open(out, "w", encoding="utf-8") as fh:
+        fh.write("# Edit spec stub from swdraw model inspect: current values. Change what you need,\n"
+                 "# delete the rest, and keep expect in step with the change.\n")
+        yaml.safe_dump(rep["spec"], fh, sort_keys=False, allow_unicode=True)
+    rep["spec_file"] = out
+    return rep
+
+
 def cmd_setup(ns) -> Dict[str, Any]:
     from .clients import setup
     a = _args(ns)
@@ -166,9 +191,18 @@ def make_parser() -> argparse.ArgumentParser:
     st.add_argument("--output-dir", dest="output_dir")
     st.add_argument("--profiles")
     st.add_argument("--scripts")
+    m = add("model", cmd_model, "3D parts: inspect a part, validate an edit spec, edit a part")
+    m.add_argument("action", choices=["inspect", "validate", "edit"])
+    m.add_argument("--spec", help="edit spec (.yaml/.json), for validate and edit")
+    m.add_argument("--part", help="inspect: part to open (default: the active part)")
+    m.add_argument("--save", action="store_true", help="edit: save after a backup if every check passes")
     r = add("run", cmd_run, "run your own script with swdraw available")
     r.add_argument("script")
     return p
+
+
+def _result_name(ns) -> str:
+    return f"model-{ns.action}" if ns.command == "model" else ns.command
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -176,8 +210,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         res = ns.fn(ns)
     except Exception as exc:
-        runner.result({"ok": False, "error": f"{exc.__class__.__name__}: {exc}"}, name=ns.command)
+        runner.result({"ok": False, "error": f"{exc.__class__.__name__}: {exc}"}, name=_result_name(ns))
         return 1
     if res is not None:
-        runner.result(res if isinstance(res, dict) else {"result": res}, name=ns.command)
+        runner.result(res if isinstance(res, dict) else {"result": res}, name=_result_name(ns))
     return 0

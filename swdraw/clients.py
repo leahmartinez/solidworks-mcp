@@ -105,7 +105,7 @@ def plan_codex(cmd: Dict[str, Any], env: Dict[str, str], path: Optional[str] = N
     pat = re.compile(r"(?ms)^\[mcp_servers\." + NAME + r"\]\n.*?(?=^\[|\Z)")
     existed = bool(pat.search(text))
     if existed:
-        new = pat.sub(section + "\n", text, count=1)
+        new = pat.sub(lambda _m: section + "\n", text, count=1)   # a plain string would unescape "\\"
     else:
         new = (text.rstrip() + "\n\n" if text.strip() else "") + section
     return {"client": "codex", "path": path, "replaces_existing": existed, "new_content": new}
