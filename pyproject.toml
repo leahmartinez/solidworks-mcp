@@ -32,7 +32,7 @@ dev = ["pytest>=7"]
 swdraw = "swdraw.cli:main"
 
 [tool.setuptools]
-packages = ["swdraw", "swdraw.drawing"]
+packages = ["swdraw", "swdraw.drawing", "swdraw.model"]
 
 [tool.uv]
 # The Claude Desktop extension runs `uv run --extra mcp --extra preview ...`, so the lock covers Windows.
