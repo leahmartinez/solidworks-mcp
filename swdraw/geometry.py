@@ -4,6 +4,7 @@ Units: model coordinates in millimetres, sheet coordinates in metres (SolidWorks
 """
 from __future__ import annotations
 
+import math
 from typing import Sequence, Tuple
 
 
@@ -37,6 +38,20 @@ def sheet_to_sketch(xform: Sequence[float], sx: float, sy: float) -> Tuple[float
 def up_is_positive(array_data: Sequence[float]) -> bool:
     """True when model +Y maps to sheet +Y (used to reject sections that came out upside down)."""
     return float(list(array_data)[4]) > 0
+
+
+def revolved_volume(profile: Sequence[Tuple[float, float]]) -> float:
+    """Volume of a closed (radius, y) profile revolved about the y axis (mm in, mm³ out)."""
+    pts = list(profile)
+    total = sum((y2 - y1) * (r1 * r1 + r1 * r2 + r2 * r2) for (r1, y1), (r2, y2) in zip(pts, pts[1:] + pts[:1]))
+    return abs(math.pi * total / 3.0)
+
+
+def revolved_area(profile: Sequence[Tuple[float, float]]) -> float:
+    """Surface area of the same solid (mm²): a frustum per profile edge; edges on the axis add nothing."""
+    pts = list(profile)
+    return sum(math.pi * (r1 + r2) * math.hypot(r2 - r1, y2 - y1)
+               for (r1, y1), (r2, y2) in zip(pts, pts[1:] + pts[:1]))
 
 
 def mm(m: float) -> float:

@@ -5,7 +5,7 @@ import pytest
 
 from swdraw import runner
 from swdraw.config import HouseStyle, deep_merge, load_title_block
-from swdraw.geometry import model_to_sheet, sheet_to_sketch, up_is_positive
+from swdraw.geometry import model_to_sheet, revolved_area, revolved_volume, sheet_to_sketch, up_is_positive
 from swdraw.notes import has_numbering, numbered_text
 from swdraw.numbering import Scheme
 from swdraw.renumber import plan_paths, replace_numbers
@@ -39,6 +39,14 @@ def test_upright_flag():
 
 
 # --------------------------------------------------------------------------- runner
+def test_revolved_tube_volume_and_area():
+    import math
+    tube = [(8, 0), (12, 0), (12, 10), (8, 10)]                 # bore 16, outside 24, 10 long
+    assert revolved_volume(tube) == pytest.approx(math.pi * (144 - 64) * 10)
+    assert revolved_volume(tube[::-1]) == pytest.approx(revolved_volume(tube))       # either winding
+    assert revolved_area(tube) == pytest.approx(2 * math.pi * (12 + 8) * 10 + 2 * math.pi * (144 - 64))
+
+
 def test_args_from_env_json_and_file(monkeypatch, tmp_path):
     monkeypatch.setenv("SWDRAW_ARGS", '{"a": 1}')
     assert runner.args() == {"a": 1}
