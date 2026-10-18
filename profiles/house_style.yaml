@@ -1,0 +1,12 @@
+# House style: applied by the `fonts` step and by every tool that writes text.
+# Override per drawing under `style:` in a drawing spec.
+
+font: Arial
+dimension_height_mm: 2.5      # dimensions, tolerances, GD&T frames, datum tags
+gdt_height_mm: 2.5
+view_label_height_mm: 3.5     # "SECTION A-A", "DETAIL B", "SCALE 2:1"
+note_height_pt: 8             # leader notes and the numbered notes block
+general_tolerance: ISO 2768-mK
+label_threshold_mm: 3.0       # document defaults taller than this are restyled as labels
+view_label_prefixes: [SECTION, DETAIL, SCALE, VIEW]
+date_format: "%d/%m/%Y"

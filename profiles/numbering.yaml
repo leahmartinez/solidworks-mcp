@@ -1,0 +1,31 @@
+# Example numbering scheme: PRODUCT-DISCIPLINE-NNNN
+#
+#   ACME1-MEC-2100   assembly (multiples of 100)
+#   ACME1-MEC-2101   first part of that assembly (x101-x199)
+#   ACME1-MEC-2102   ...
+#
+# `swdraw.numbering` validates numbers against this file and allocates the next free one.
+
+product: ACME1
+pattern: "{product}-{discipline}-{number:04d}"
+block_size: 100            # x100 is the assembly, x101..x(100+block_size-1) are its parts
+first_block: 2100
+disciplines:
+  MEC: Mechanical parts and assemblies
+  ELE: Electrical / wiring
+  PCB: Printed circuit boards
+  PUR: Purchased (bought-in) items
+file_name: "{number}"      # drawing and part file stem; extension added by the tool
+
+# Custom properties written to parts and drawings when a number is assigned.
+# Values may use {number}, {parent}, {description}, {revision} and any key from `properties_static`.
+part_properties:
+  PartNo: "{number}"
+  Description: "{description}"
+  Revision: "{revision}"
+  ParentAssy: "{parent}"
+drawing_properties:
+  PartNo: "{number}"
+  Description: "{description}"
+  Revision: "{revision}"
+properties_static: {}
